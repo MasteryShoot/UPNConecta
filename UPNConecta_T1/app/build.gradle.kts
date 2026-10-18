@@ -30,9 +30,9 @@ android {
         manifestPlaceholders["MAPS_API_KEY"] =
             propiedadesLocales.getProperty("MAPS_API_KEY", "")
 
-        // URL del backend (Spring Boot). Por defecto apunta a la PC desde el emulador;
-        // para usar Render se define API_URL=https://<servicio>.onrender.com/api/ en local.properties
-        val apiUrl = propiedadesLocales.getProperty("API_URL", "http://10.0.2.2:8080/api/")
+        // URL del backend (Spring Boot). Por defecto usa el servicio publicado en Render;
+        // para probar con el backend en la PC se define API_URL=http://10.0.2.2:8080/api/ en local.properties
+        val apiUrl = propiedadesLocales.getProperty("API_URL", "https://upnconecta-backend.onrender.com/api/")
         buildConfigField("String", "API_URL", "\"$apiUrl\"")
     }
 
