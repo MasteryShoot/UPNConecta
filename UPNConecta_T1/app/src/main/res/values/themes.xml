@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.UPNConecta" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/fondo_conecta</item>
+    </style>
+
+    <!-- El splash arranca en negro para que no se vea un destello blanco -->
+    <style name="Theme.UPNConecta.Splash">
+        <item name="android:windowBackground">@color/negro_conecta</item>
+    </style>
+</resources>

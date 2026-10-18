@@ -1,0 +1,39 @@
+# Blueprint de Render: base de datos PostgreSQL + backend (Web Service con Docker).
+# En Render: New > Blueprint > elegir este repositorio.
+databases:
+  - name: upnconecta-db
+    plan: free
+    databaseName: upnconecta
+    user: upnconecta
+
+services:
+  - type: web
+    name: upnconecta-backend
+    runtime: docker
+    plan: free
+    rootDir: UPNConecta_Backend
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: upnconecta-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: upnconecta-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: upnconecta-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: upnconecta-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: upnconecta-db
+          property: password
+      - key: PERIODO_ACTUAL
+        value: "2026-2"

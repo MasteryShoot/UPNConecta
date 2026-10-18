@@ -1,0 +1,14 @@
+# Solo se sube el código de la app y del backend
+*.docx
+*.pdf
+*.pptx
+entregables/
+
+# Archivos generados o propios de cada PC
+build/
+.gradle/
+.kotlin/
+.idea/
+*.iml
+local.properties
+.DS_Store

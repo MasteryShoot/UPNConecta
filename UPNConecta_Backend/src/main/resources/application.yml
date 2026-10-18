@@ -1,0 +1,29 @@
+# Las credenciales se leen de variables de entorno (nunca se suben a Git).
+# Valores por defecto pensados para una base local de desarrollo.
+server:
+  port: ${PORT:8080}
+
+spring:
+  application:
+    name: upnconecta-backend
+  datasource:
+    # En Render, DB_HOST, DB_PORT y DB_NAME se llenan automáticamente desde la base
+    url: ${DB_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:upnconecta}}
+    username: ${DB_USER:upnconecta}
+    password: ${DB_PASSWORD:upnconecta}
+  jpa:
+    # Las tablas las crea Flyway; Hibernate solo valida que coincidan
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+app:
+  periodo-actual: ${PERIODO_ACTUAL:2026-2}
