@@ -12,3 +12,7 @@ build/
 *.iml
 local.properties
 .DS_Store
+
+# Registros de compilación locales
+*.log
+compilar.bat
