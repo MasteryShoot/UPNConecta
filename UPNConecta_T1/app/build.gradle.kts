@@ -22,8 +22,8 @@ android {
         applicationId = "com.example.upnconecta"
         minSdk = 24
         targetSdk = 37
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -34,6 +34,11 @@ android {
         // para probar con el backend en la PC se define API_URL=http://10.0.2.2:8080/api/ en local.properties
         val apiUrl = propiedadesLocales.getProperty("API_URL", "https://upnconecta-backend.onrender.com/api/")
         buildConfigField("String", "API_URL", "\"$apiUrl\"")
+
+        // Id de la app registrada en Microsoft Entra ID (portal de Azure), cuenta gratuita.
+        // Se define en local.properties como MS_CLIENT_ID=xxxxxxxx-xxxx-...
+        val msClientId = propiedadesLocales.getProperty("MS_CLIENT_ID", "")
+        buildConfigField("String", "MS_CLIENT_ID", "\"$msClientId\"")
     }
 
     buildTypes {

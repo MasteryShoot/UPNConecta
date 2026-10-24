@@ -57,7 +57,14 @@ class Usuario(
     @Column(name = "nombre_completo")
     var nombreCompleto: String = "",
     var rol: String = "",
-    var verificado: Boolean = false
+    var verificado: Boolean = false,
+    // null cuando la cuenta se creó con Microsoft (no tiene contraseña propia)
+    @Column(name = "clave_hash")
+    var claveHash: String? = null,
+    @Column(name = "sede_codigo")
+    var sedeCodigo: String? = null,
+    // CORREO = registro con contraseña, MICROSOFT = inicio con la cuenta institucional
+    var proveedor: String = "CORREO"
 )
 
 @Entity

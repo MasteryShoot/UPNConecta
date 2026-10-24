@@ -1,5 +1,6 @@
 package com.example.upnconecta.profesor
 
+import com.example.upnconecta.data.local.HistorialDb
 import android.app.Activity
 import android.os.Bundle
 import android.widget.Toast
@@ -120,6 +121,12 @@ fun PantallaEvaluacionProfesor(codigo: String) {
 
         preferencias.guardarEvaluacionDocente(codigo, puntajes.toList())
         val usuario = preferencias.usuarioActual()
+        if (usuario != null) {
+            HistorialDb(context).guardarEvaluacion(
+                usuario.correo, HistorialDb.TIPO_DOCENTE, codigo,
+                docente.nombre, docente.curso, puntajes.average().toFloat()
+            )
+        }
         // HU3.03: reseña anónima o pública
         val autor = if (anonimo) "Anónimo" else usuario?.nombre ?: "Alumno"
         if (comentario.isNotBlank()) {

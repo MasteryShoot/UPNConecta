@@ -10,10 +10,20 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 /**
- * Rutas del backend para la HU2.03 "Calificar un área de la sede".
+ * Rutas del backend: cuentas (T2) y la HU2.03 "Calificar un área de la sede".
  * Cada operación del CRUD se mapea a un verbo HTTP.
  */
 interface ApiService {
+
+    // Cuentas: registro e inicio de sesión
+    @POST("auth/registro")
+    suspend fun registrar(@Body datos: RegistroRequest): UsuarioRespuesta
+
+    @POST("auth/login")
+    suspend fun iniciarSesion(@Body datos: LoginRequest): UsuarioRespuesta
+
+    @POST("auth/microsoft")
+    suspend fun iniciarConMicrosoft(@Body datos: MicrosoftRequest): UsuarioRespuesta
 
     @GET("criterios")
     suspend fun obtenerCriterios(@Query("area") area: String): List<CriterioApi>

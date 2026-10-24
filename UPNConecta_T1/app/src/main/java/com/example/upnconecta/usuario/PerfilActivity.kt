@@ -1,5 +1,9 @@
 package com.example.upnconecta.usuario
 
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Switch
+import com.example.upnconecta.data.local.HistorialDb
+import com.example.upnconecta.data.Ajustes
 import android.content.Intent
 import android.os.Bundle
 import androidx.compose.runtime.key
@@ -91,7 +95,12 @@ fun PantallaPerfil(refresco: Int) {
     var menu by remember { mutableStateOf(false) }
     var verTerminos by remember { mutableStateOf(false) }
 
-    val evaluaciones = preferencias.misEvaluaciones()
+    val ajustes = remember { Ajustes(context, usuario.correo) }
+    var anonimoPorDefecto by remember { mutableStateOf(ajustes.anonimoPorDefecto) }
+    var avisoSorteos by remember { mutableStateOf(ajustes.avisoSorteos) }
+
+    // El historial sale de SQLite, así se ve aunque no haya conexión
+    val evaluaciones = remember(refresco) { HistorialDb(context).historial(usuario.correo) }
     val comentarios = preferencias.totalComentariosUsuario()
     val sorteos = preferencias.totalSorteosInscritos()
     val evaluoSostenibilidad = DatosDemo.sedes.any { preferencias.yaEvaluoArea(it.id, "sostenibilidad") }
@@ -203,6 +212,33 @@ fun PantallaPerfil(refresco: Int) {
             }
             items(evaluaciones.take(6)) { FilaEvaluacion(it) }
 
+            // Ajustes guardados en SharedPreferences (archivo upn_conecta_ajustes)
+            item { Titulo("Ajustes") }
+            item {
+                TarjetaBlanca(
+                    Modifier
+                        .padding(horizontal = 16.dp)
+                        .fillMaxWidth()
+                ) {
+                    Column(Modifier.padding(horizontal = 14.dp, vertical = 6.dp)) {
+                        FilaAjuste("Publicar como anónimo por defecto", anonimoPorDefecto) {
+                            anonimoPorDefecto = it
+                            ajustes.anonimoPorDefecto = it
+                        }
+                        FilaAjuste("Mostrar aviso de sorteos en el inicio", avisoSorteos) {
+                            avisoSorteos = it
+                            ajustes.avisoSorteos = it
+                        }
+                        Text(
+                            "Ingreso con " + if (ajustes.metodoIngreso == Ajustes.METODO_MICROSOFT)
+                                "cuenta Microsoft 365" else "correo y contraseña",
+                            color = GrisTexto, fontSize = 11.sp,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    }
+                }
+            }
+
             item {
                 OutlinedButton(
                     onClick = { cerrarSesion() },
@@ -296,5 +332,16 @@ private fun FilaEvaluacion(evaluacion: MiEvaluacion) {
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun FilaAjuste(texto: String, activo: Boolean, alCambiar: (Boolean) -> Unit) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text(texto, fontSize = 13.sp, modifier = Modifier.weight(1f))
+        Switch(
+            checked = activo, onCheckedChange = alCambiar,
+            colors = SwitchDefaults.colors(checkedThumbColor = Negro, checkedTrackColor = Amarillo)
+        )
     }
 }

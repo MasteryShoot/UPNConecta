@@ -35,6 +35,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,8 +48,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.upnconecta.data.CuentaRepositorio
 import com.example.upnconecta.data.DatosDemo
-import com.example.upnconecta.data.Preferencias
 import com.example.upnconecta.data.Roles
 import com.example.upnconecta.ui.componentes.BotonAmarillo
 import com.example.upnconecta.ui.componentes.Etiqueta
@@ -60,6 +61,7 @@ import com.example.upnconecta.ui.theme.GrisTexto
 import com.example.upnconecta.ui.theme.Negro
 import com.example.upnconecta.ui.theme.Rojo
 import com.example.upnconecta.ui.theme.pantallaConecta
+import kotlinx.coroutines.launch
 
 class RegistroActivity : ComponentActivity() {
 
@@ -74,7 +76,9 @@ class RegistroActivity : ComponentActivity() {
 @Composable
 fun PantallaRegistro() {
     val context = LocalContext.current
-    val preferencias = remember { Preferencias(context) }
+    val repositorio = remember { CuentaRepositorio() }
+    val alcance = rememberCoroutineScope()
+    var enviando by remember { mutableStateOf(false) }
 
     var nombre by remember { mutableStateOf("") }
     var correo by remember { mutableStateOf("") }
@@ -93,17 +97,24 @@ fun PantallaRegistro() {
             nombre.isBlank() || correo.isBlank() || sedeId.isEmpty() ||
                 contrasena.isEmpty() || confirmar.isEmpty() -> "Complete todos los campos"
             rolDetectado == null -> "Ingrese un correo institucional válido (@upn.pe)"
-            preferencias.existeUsuario(correo) -> "Ya existe una cuenta con este correo"
             contrasena.length < 6 -> "La contraseña debe tener al menos 6 caracteres"
             contrasena != confirmar -> "Las contraseñas no coinciden"
             !aceptaTerminos -> "Debe aceptar los términos y condiciones"
             else -> null
         }
-        if (error == null) {
-            preferencias.registrarUsuario(nombre, correo, sedeId, contrasena)
-            Toast.makeText(context, "Cuenta creada correctamente. Inicia sesión.", Toast.LENGTH_SHORT).show()
-            // Regresa al Login (diagrama: Registro ↔ Login)
-            (context as? Activity)?.finish()
+        if (error != null || enviando) return
+        // RN03 (una cuenta por correo) la valida el backend: responde 409 si ya existe
+        enviando = true
+        alcance.launch {
+            repositorio.registrar(nombre, correo, sedeId, contrasena).fold(
+                onSuccess = {
+                    Toast.makeText(context, "Cuenta creada correctamente. Inicia sesión.", Toast.LENGTH_SHORT).show()
+                    // Regresa al Login (diagrama: Registro ↔ Login)
+                    (context as? Activity)?.finish()
+                },
+                onFailure = { error = it.message }
+            )
+            enviando = false
         }
     }
 

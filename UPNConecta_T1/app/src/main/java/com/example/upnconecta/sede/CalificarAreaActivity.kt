@@ -1,5 +1,7 @@
 package com.example.upnconecta.sede
 
+import com.example.upnconecta.data.local.HistorialDb
+import com.example.upnconecta.data.Ajustes
 import android.app.Activity
 import android.os.Bundle
 import android.widget.Toast
@@ -143,7 +145,10 @@ private fun FormularioCalificacion(
         })
     }
     var comentario by remember { mutableStateOf(existente?.comentario ?: "") }
-    var anonimo by remember { mutableStateOf(existente?.esAnonima ?: false) }
+    // Si es una evaluación nueva se usa el ajuste "anónimo por defecto" del perfil
+    var anonimo by remember {
+        mutableStateOf(existente?.esAnonima ?: Ajustes(context, usuario.correo).anonimoPorDefecto)
+    }
     var sinReciclaje by remember { mutableStateOf(existente?.sinReciclaje ?: false) }
     var intentoGuardar by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -157,9 +162,16 @@ private fun FormularioCalificacion(
         when (envio) {
             is EstadoEnvio.Exito -> {
                 val resena = envio.resena
+                val historial = HistorialDb(context)
                 if (resena == null) {
                     preferencias.eliminarEvaluacionArea(sedeId, areaId)
+                    historial.eliminarEvaluacion(usuario.correo, HistorialDb.TIPO_AREA, "$sedeId|$areaId")
                 } else {
+                    historial.guardarEvaluacion(
+                        usuario.correo, HistorialDb.TIPO_AREA, "$sedeId|$areaId",
+                        DatosDemo.area(areaId).nombre, "UPN " + DatosDemo.sede(sedeId).nombre,
+                        resena.promedio.toFloat()
+                    )
                     preferencias.guardarEvaluacionArea(
                         sedeId, areaId, resena.calificaciones.map { it.puntaje }, resena.experiencia,
                         // la alerta de reciclaje solo se cuenta una vez

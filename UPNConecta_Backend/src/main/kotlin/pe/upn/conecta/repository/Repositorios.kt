@@ -17,7 +17,9 @@ interface SedeRepository : JpaRepository<Sede, Int> {
     fun findByCodigo(codigo: String): Sede?
 }
 
-interface UsuarioRepository : JpaRepository<Usuario, String>
+interface UsuarioRepository : JpaRepository<Usuario, String> {
+    fun findByCorreo(correo: String): Usuario?
+}
 
 interface CriterioRepository : JpaRepository<Criterio, Int> {
     fun findByAreaOrderByOrden(area: String): List<Criterio>

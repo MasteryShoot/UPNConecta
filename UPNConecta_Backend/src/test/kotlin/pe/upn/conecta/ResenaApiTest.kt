@@ -66,7 +66,7 @@ class ResenaApiTest {
             content = cuerpo(correo = "jose@gmail.com", codigo = "JOSE")
         }.andExpect {
             status { isBadRequest() }
-            jsonPath("$.mensaje") { value("Solo se aceptan correos institucionales @upn.pe") }
+            jsonPath("$.mensaje") { value("Solo se aceptan correos institucionales") }
         }
     }
 

@@ -34,6 +34,18 @@ class Preferencias(context: Context) {
         }
     }
 
+    /**
+     * Copia local de la cuenta que devolvió el backend. La contraseña ya no se
+     * guarda en el teléfono: la valida la API.
+     */
+    fun guardarCuenta(nombre: String, correo: String, sedeId: String?) {
+        prefs.edit {
+            putString(claveUsuario(correo, "nombre"), nombre.trim())
+            // Si la cuenta viene de Microsoft aún no tiene sede: se elige en la siguiente pantalla
+            putString(claveUsuario(correo, "sede"), sedeId ?: DatosDemo.sedes.first().id)
+        }
+    }
+
     fun credencialesValidas(correo: String, contrasena: String): Boolean =
         prefs.getString(claveUsuario(correo, "clave"), null) == hash(contrasena)
 

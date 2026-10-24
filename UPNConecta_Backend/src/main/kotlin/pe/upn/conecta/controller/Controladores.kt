@@ -13,6 +13,12 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import pe.upn.conecta.dto.CriterioResponse
+import pe.upn.conecta.dto.LoginRequest
+import pe.upn.conecta.dto.MicrosoftLoginRequest
+import pe.upn.conecta.dto.RegistroRequest
+import pe.upn.conecta.dto.SedeUsuarioRequest
+import pe.upn.conecta.dto.UniversidadResponse
+import pe.upn.conecta.dto.UsuarioResponse
 import pe.upn.conecta.dto.MensajeResponse
 import pe.upn.conecta.dto.OpinionResponse
 import pe.upn.conecta.dto.ResenaRequest
@@ -20,6 +26,8 @@ import pe.upn.conecta.dto.ResenaResponse
 import pe.upn.conecta.dto.SedeResponse
 import pe.upn.conecta.repository.CriterioRepository
 import pe.upn.conecta.repository.SedeRepository
+import pe.upn.conecta.repository.UniversidadRepository
+import pe.upn.conecta.service.AuthService
 import pe.upn.conecta.service.ResenaService
 
 /** Datos maestros que la app necesita para armar el formulario. */
@@ -27,8 +35,15 @@ import pe.upn.conecta.service.ResenaService
 @RequestMapping("/api")
 class CatalogoController(
     private val sedeRepository: SedeRepository,
-    private val criterioRepository: CriterioRepository
+    private val criterioRepository: CriterioRepository,
+    private val universidadRepository: UniversidadRepository
 ) {
+
+    @GetMapping("/universidades")
+    fun universidades(): List<UniversidadResponse> =
+        universidadRepository.findAll().map {
+            UniversidadResponse(it.idUniversidad!!, it.nombre, it.siglas, it.dominioCorreo)
+        }
 
     @GetMapping("/sedes")
     fun sedes(): List<SedeResponse> =
@@ -77,4 +92,29 @@ class ResenaController(private val resenaService: ResenaService) {
         resenaService.eliminar(idResena, usuario)
         return MensajeResponse("Evaluación eliminada correctamente")
     }
+}
+
+/** Registro e inicio de sesión (T2). */
+@RestController
+@RequestMapping("/api")
+class AuthController(private val authService: AuthService) {
+
+    @PostMapping("/auth/registro")
+    @ResponseStatus(HttpStatus.CREATED)
+    fun registro(@Valid @RequestBody request: RegistroRequest): UsuarioResponse =
+        authService.registrar(request)
+
+    @PostMapping("/auth/login")
+    fun login(@Valid @RequestBody request: LoginRequest): UsuarioResponse =
+        authService.login(request)
+
+    @PostMapping("/auth/microsoft")
+    fun microsoft(@Valid @RequestBody request: MicrosoftLoginRequest): UsuarioResponse =
+        authService.loginMicrosoft(request.accessToken)
+
+    @PutMapping("/usuarios/{codigo}/sede")
+    fun cambiarSede(
+        @PathVariable codigo: String,
+        @Valid @RequestBody request: SedeUsuarioRequest
+    ): UsuarioResponse = authService.cambiarSede(codigo, request.sedeCodigo)
 }

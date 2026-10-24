@@ -62,3 +62,27 @@ data class OpinionApi(
 )
 
 data class MensajeApi(val mensaje: String)
+
+// ------------------------------------------------------------ Cuentas (T2)
+
+data class RegistroRequest(
+    val nombreCompleto: String,
+    val correo: String,
+    val sedeCodigo: String,
+    val clave: String
+)
+
+data class LoginRequest(val correo: String, val clave: String)
+
+data class MicrosoftRequest(val accessToken: String)
+
+/** Cuenta que devuelve el backend al registrarse o iniciar sesión. */
+data class UsuarioRespuesta(
+    val codigo: String,
+    val correo: String,
+    val nombreCompleto: String,
+    val rol: String,
+    val sedeCodigo: String?,
+    val universidad: String,
+    val proveedor: String
+)

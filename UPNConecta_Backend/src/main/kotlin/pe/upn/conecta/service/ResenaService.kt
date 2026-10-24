@@ -125,7 +125,7 @@ class ResenaService(
         val correo = datos.correo.trim().lowercase()
         val dominio = "@" + correo.substringAfter("@", "")
         val universidad = universidadRepository.findByDominioCorreo(dominio)
-            ?: throw ApiException(HttpStatus.BAD_REQUEST, "Solo se aceptan correos institucionales @upn.pe")
+            ?: throw ApiException(HttpStatus.BAD_REQUEST, "Solo se aceptan correos institucionales")
 
         val codigo = correo.substringBefore("@").uppercase()
         if (codigo != datos.codigo.trim().uppercase()) {
@@ -134,7 +134,7 @@ class ResenaService(
 
         usuarioRepository.findById(codigo).orElse(null)?.let { return it }
 
-        val rol = if (Regex("^N\\d{8}$").matches(codigo)) "ALUMNO" else "DOCENTE"
+        val rol = ReglasUsuario.rolDeCodigo(codigo)
         return usuarioRepository.save(
             Usuario(
                 codigo = codigo,

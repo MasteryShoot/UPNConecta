@@ -26,6 +26,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
+    // Solo el módulo de cifrado de Spring Security, para guardar las contraseñas con BCrypt
+    implementation("org.springframework.security:spring-security-crypto")
 
     // Migraciones de la base de datos (las tablas se crean desde db/migration)
     implementation("org.flywaydb:flyway-core")

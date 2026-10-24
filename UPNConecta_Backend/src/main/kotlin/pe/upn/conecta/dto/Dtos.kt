@@ -99,3 +99,53 @@ data class OpinionResponse(
 )
 
 data class MensajeResponse(val mensaje: String)
+
+// ------------------------------------------------------- Cuentas (T2)
+
+data class RegistroRequest(
+    @field:NotBlank(message = "El nombre es obligatorio")
+    @field:Size(max = 100)
+    val nombreCompleto: String,
+    @field:NotBlank(message = "El correo es obligatorio")
+    val correo: String,
+    @field:NotBlank(message = "Elige tu sede")
+    val sedeCodigo: String,
+    @field:Size(min = 6, max = 60, message = "La contraseña debe tener al menos 6 caracteres")
+    val clave: String
+)
+
+data class LoginRequest(
+    @field:NotBlank(message = "El correo es obligatorio")
+    val correo: String,
+    @field:NotBlank(message = "La contraseña es obligatoria")
+    val clave: String
+)
+
+/** Token que la app obtiene de Microsoft; el backend lo valida contra Microsoft Graph. */
+data class MicrosoftLoginRequest(
+    @field:NotBlank(message = "Falta el token de Microsoft")
+    val accessToken: String
+)
+
+data class SedeUsuarioRequest(
+    @field:NotBlank(message = "Elige tu sede")
+    val sedeCodigo: String
+)
+
+/** Datos de la cuenta que la app guarda al iniciar sesión (nunca incluye la contraseña). */
+data class UsuarioResponse(
+    val codigo: String,
+    val correo: String,
+    val nombreCompleto: String,
+    val rol: String,
+    val sedeCodigo: String?,
+    val universidad: String,
+    val proveedor: String
+)
+
+data class UniversidadResponse(
+    val idUniversidad: Int,
+    val nombre: String,
+    val siglas: String,
+    val dominioCorreo: String
+)
