@@ -36,8 +36,8 @@ android {
         buildConfigField("String", "API_URL", "\"$apiUrl\"")
 
         // Id de la app registrada en Microsoft Entra ID (portal de Azure), cuenta gratuita.
-        // Se define en local.properties como MS_CLIENT_ID=xxxxxxxx-xxxx-...
-        val msClientId = propiedadesLocales.getProperty("MS_CLIENT_ID", "")
+        // No es un secreto (la app es un cliente público con PKCE); se puede cambiar en local.properties
+        val msClientId = propiedadesLocales.getProperty("MS_CLIENT_ID", "26c34a39-4a53-4350-98f8-9cf9d7faf639")
         buildConfigField("String", "MS_CLIENT_ID", "\"$msClientId\"")
     }
 
