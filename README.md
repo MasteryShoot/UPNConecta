@@ -6,10 +6,10 @@ App Android donde alumnos y docentes califican las áreas de su sede. Curso Desa
 
 | Pieza | Tecnología | Dónde corre | Carpeta |
 |---|---|---|---|
-| App | Kotlin + Jetpack Compose | El celular o el emulador | `UPNConecta_T1/` |
+| App | Kotlin + Jetpack Compose | El celular o el emulador | `UPNConecta_App/` |
 | Backend (API REST) | Spring Boot 3.5, Java 21, Gradle | **Render, en la nube**. No corre en la PC. | `UPNConecta_Backend/` |
 | Base de datos central | PostgreSQL 18 | **Render** | Tablas en `UPNConecta_Backend/src/main/resources/db/migration/` |
-| Datos locales | SQLite (historial) y SharedPreferences (ajustes y sesión) | El celular | `UPNConecta_T1/.../data/` |
+| Datos locales | SQLite (historial) y SharedPreferences (ajustes y sesión) | El celular | `UPNConecta_App/.../data/` |
 | Identidad | Microsoft Entra ID | Microsoft | `.../data/remote/MicrosoftAuth.kt` |
 | Mapas | Google Maps | Google | `.../explorar/ExplorarActivity.kt` |
 | Código fuente | Git | GitHub: [MasteryShoot/UPNConecta](https://github.com/MasteryShoot/UPNConecta) | Este repositorio |
@@ -42,7 +42,7 @@ Correo y contraseña (`/api/auth/registro` y `/api/auth/login`) quedan como alte
 
 ## Compilar
 
-**App:** abrir `UPNConecta_T1/` en Android Studio y ejecutar. Para ver el mapa, copiar `local.properties.example` como `local.properties` y poner la clave de Google Maps. Sin esa clave todo funciona, pero el mapa sale en blanco.
+**App:** abrir `UPNConecta_App/` en Android Studio y ejecutar. Para ver el mapa, copiar `local.properties.example` como `local.properties` y poner la clave de Google Maps. Sin esa clave todo funciona, pero el mapa sale en blanco.
 
 **Backend en la PC (opcional, solo para desarrollar):** necesita PostgreSQL y la variable `JWT_SECRET` (mínimo 32 caracteres).
 

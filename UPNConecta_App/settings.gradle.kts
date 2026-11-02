@@ -22,5 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "UPNConecta_T1"
+rootProject.name = "UPNConecta"
 include(":app")
