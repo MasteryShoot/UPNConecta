@@ -291,7 +291,7 @@ fun PantallaLogin(respuestaMicrosoft: Uri? = null, alProcesar: () -> Unit = {}) 
                 Button(
                     onClick = { continuarConMicrosoft() },
                     shape = RoundedCornerShape(26.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Amarillo, contentColor = Negro),
+                    colors = ButtonDefaults.buttonColors(containerColor = Negro, contentColor = Blanco),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp)
