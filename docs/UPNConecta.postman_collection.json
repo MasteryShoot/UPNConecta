@@ -1,0 +1,114 @@
+{
+  "info": {
+    "name": "UPN Conecta API",
+    "description": "Backend publicado en Render. Primero ejecuta 'Iniciar sesión' con una cuenta tuya: el token se guarda solo y lo usan las rutas privadas.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base", "value": "https://upnconecta-backend.onrender.com/api" },
+    { "key": "token", "value": "" },
+    { "key": "idResena", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Estado de la API y la base",
+      "request": { "method": "GET", "url": "{{base}}/estado" }
+    },
+    {
+      "name": "Validar dominio: correo UPN (200)",
+      "request": { "method": "GET", "url": "{{base}}/auth/dominio?correo=N00123456@upn.pe" }
+    },
+    {
+      "name": "Validar dominio: Gmail (400)",
+      "request": { "method": "GET", "url": "{{base}}/auth/dominio?correo=alguien@gmail.com" }
+    },
+    {
+      "name": "Iniciar sesión",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "  pm.collectionVariables.set('token', pm.response.json().token);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{base}}/auth/login",
+        "body": { "mode": "raw", "raw": "{\n  \"correo\": \"tu_correo@upn.pe\",\n  \"clave\": \"tu_clave\"\n}" }
+      }
+    },
+    {
+      "name": "Sedes",
+      "request": { "method": "GET", "url": "{{base}}/sedes" }
+    },
+    {
+      "name": "Criterios de limpieza",
+      "request": { "method": "GET", "url": "{{base}}/criterios?area=limpieza" }
+    },
+    {
+      "name": "Publicar sin token (401)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{base}}/resenas",
+        "body": { "mode": "raw", "raw": "{\n  \"codigoSede\": \"los_olivos\",\n  \"area\": \"limpieza\",\n  \"experiencia\": 4,\n  \"calificaciones\": [\n    { \"idCriterio\": 4, \"puntaje\": 4 },\n    { \"idCriterio\": 5, \"puntaje\": 3 },\n    { \"idCriterio\": 6, \"puntaje\": 5 }\n  ]\n}" }
+      }
+    },
+    {
+      "name": "CREATE: registrar evaluación",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 201) {",
+              "  pm.collectionVariables.set('idResena', pm.response.json().idResena);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{base}}/resenas",
+        "body": { "mode": "raw", "raw": "{\n  \"codigoSede\": \"los_olivos\",\n  \"area\": \"limpieza\",\n  \"experiencia\": 4,\n  \"calificaciones\": [\n    { \"idCriterio\": 4, \"puntaje\": 4 },\n    { \"idCriterio\": 5, \"puntaje\": 3 },\n    { \"idCriterio\": 6, \"puntaje\": 5 }\n  ]\n}" }
+      }
+    },
+    {
+      "name": "READ: mi evaluación",
+      "request": {
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+        "method": "GET",
+        "url": "{{base}}/resenas/mia?sede=los_olivos&area=limpieza"
+      }
+    },
+    {
+      "name": "UPDATE: editar evaluación",
+      "request": {
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{base}}/resenas/{{idResena}}",
+        "body": { "mode": "raw", "raw": "{\n  \"codigoSede\": \"los_olivos\",\n  \"area\": \"limpieza\",\n  \"experiencia\": 2,\n  \"calificaciones\": [\n    { \"idCriterio\": 4, \"puntaje\": 2 },\n    { \"idCriterio\": 5, \"puntaje\": 2 },\n    { \"idCriterio\": 6, \"puntaje\": 2 }\n  ]\n}" }
+      }
+    },
+    {
+      "name": "DELETE: eliminar evaluación",
+      "request": {
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+        "method": "DELETE",
+        "url": "{{base}}/resenas/{{idResena}}"
+      }
+    }
+  ]
+}

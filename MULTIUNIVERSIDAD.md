@@ -25,12 +25,15 @@ Es gratis y legal porque:
 | UTP | Universidad Tecnológica del Perú | `@utp.edu.pe` | `#C8102E` (rojo oscuro) |
 | ULIMA | Universidad de Lima | `@aloe.ulima.edu.pe` | `#F47920` (naranja) |
 
-> Antes de la T3 hay que confirmar con un alumno de cada universidad que su correo entra por
-> Microsoft (si alguna usa Google Workspace, se cambia por otra universidad).
+> Verificado el 2026-11-02 con el servicio público de Microsoft (`getuserrealm`): los cuatro dominios
+> están en Microsoft Entra ID. Falta comprobar que cada universidad permita el consentimiento de
+> usuario, algo que solo se sabe iniciando sesión con una cuenta real de esa universidad.
 
 ## Lo que ya está hecho (T2)
 
 - [x] Tabla `UNIVERSIDAD` con `dominio_correo` y migración `V3` con las 4 universidades.
+- [x] Tabla `DOMINIO_PERMITIDO` (migración `V4`): cada dominio se activa por separado. Para abrir una
+      universidad basta poner `activo = TRUE` después de cargar sus sedes.
 - [x] `GET /api/universidades`.
 - [x] El backend identifica la universidad por el dominio del correo (`AuthService.universidadDe`).
 - [x] Login con Microsoft usando el tenant `organizations` (acepta cualquier cuenta de trabajo o estudio).
