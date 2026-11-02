@@ -32,6 +32,18 @@ class Universidad(
     var dominioCorreo: String = ""
 )
 
+/** Dominios de correo con los que se puede ingresar (una universidad puede tener varios). */
+@Entity
+@Table(name = "dominio_permitido")
+class DominioPermitido(
+    @Id
+    var dominio: String = "",
+    @Column(name = "id_universidad")
+    var idUniversidad: Int = 0,
+    // false: la universidad está registrada, pero la app todavía no tiene sus sedes
+    var activo: Boolean = false
+)
+
 @Entity
 @Table(name = "sede")
 class Sede(

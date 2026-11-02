@@ -5,6 +5,7 @@ import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
+import org.springframework.web.HttpRequestMethodNotSupportedException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.MissingServletRequestParameterException
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -52,6 +53,12 @@ class ManejoErrores {
     @ExceptionHandler(NoResourceFoundException::class)
     fun rutaInexistente(e: NoResourceFoundException) =
         ResponseEntity.status(HttpStatus.NOT_FOUND).body(MensajeResponse("La ruta solicitada no existe"))
+
+    // Por ejemplo, abrir en el navegador (GET) una ruta que solo acepta POST
+    @ExceptionHandler(HttpRequestMethodNotSupportedException::class)
+    fun metodoNoPermitido(e: HttpRequestMethodNotSupportedException) =
+        ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+            .body(MensajeResponse("Esta ruta no acepta ${e.method}. Revisa /swagger-ui.html"))
 
     @ExceptionHandler(Exception::class)
     fun inesperado(e: Exception): ResponseEntity<MensajeResponse> {

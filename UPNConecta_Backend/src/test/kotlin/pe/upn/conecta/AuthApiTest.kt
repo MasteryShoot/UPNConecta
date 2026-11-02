@@ -38,6 +38,8 @@ class AuthApiTest {
             jsonPath("$.codigo") { value("N00366994") }
             jsonPath("$.rol") { value("ALUMNO") }
             jsonPath("$.universidad") { value("UPN") }
+            // Registrarse no prueba que el correo sea tuyo: el token solo llega al iniciar sesión
+            jsonPath("$.token") { doesNotExist() }
         }
     }
 
@@ -59,6 +61,7 @@ class AuthApiTest {
         }.andExpect {
             status { isOk() }
             jsonPath("$.nombreCompleto") { value("Vanessa Bances") }
+            jsonPath("$.token") { isNotEmpty() }
         }
 
         mvc.post("/api/auth/login") {
@@ -83,5 +86,55 @@ class AuthApiTest {
             status { isOk() }
             jsonPath("$.length()") { value(4) }
         }
+    }
+
+    @Test
+    @Order(6)
+    fun `valida el ingreso por dominio`() {
+        mvc.get("/api/auth/dominio?correo=N00329320@upn.pe").andExpect {
+            status { isOk() }
+            jsonPath("$.universidad") { value("UPN") }
+            jsonPath("$.rol") { value("ALUMNO") }
+        }
+        // La UPN también usa este dominio (por ejemplo, el correo del docente del curso)
+        mvc.get("/api/auth/dominio?correo=gerardo.sarmiento@upn.edu.pe").andExpect {
+            status { isOk() }
+            jsonPath("$.rol") { value("DOCENTE") }
+        }
+        mvc.get("/api/auth/dominio?correo=jose@gmail.com").andExpect { status { isBadRequest() } }
+        mvc.get("/api/auth/dominio?correo=sin-arroba").andExpect { status { isBadRequest() } }
+        // Registrada para la siguiente fase, pero todavía sin sedes en la app
+        mvc.get("/api/auth/dominio?correo=u202012345@upc.edu.pe").andExpect { status { isForbidden() } }
+    }
+
+    @Test
+    @Order(7)
+    fun `acepta un codigo de docente largo`() {
+        mvc.post("/api/auth/registro") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"nombreCompleto":"Docente Largo","correo":"nombre.segundo.apellido.materno@upn.edu.pe",
+                "sedeCodigo":"brena","clave":"secreta1"}"""
+        }.andExpect {
+            status { isCreated() }
+            jsonPath("$.rol") { value("DOCENTE") }
+        }
+    }
+
+    @Test
+    @Order(8)
+    fun `muestra el estado del servicio y su documentacion`() {
+        mvc.get("/").andExpect { status { isOk() } }
+        mvc.get("/api/estado").andExpect {
+            status { isOk() }
+            jsonPath("$.estado") { value("UP") }
+            jsonPath("$.sedes") { value(8) }
+        }
+        mvc.get("/v3/api-docs").andExpect { status { isOk() } }
+    }
+
+    @Test
+    @Order(9)
+    fun `una ruta solo POST abierta en el navegador responde 405`() {
+        mvc.get("/api/auth/login").andExpect { status { isMethodNotAllowed() } }
     }
 }

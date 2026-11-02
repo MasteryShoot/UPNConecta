@@ -35,5 +35,8 @@ services:
         fromDatabase:
           name: upnconecta-db
           property: password
+      # Firma los tokens de sesión. Render genera un valor aleatorio al crear el servicio
+      - key: JWT_SECRET
+        generateValue: true
       - key: PERIODO_ACTUAL
         value: "2026-2"

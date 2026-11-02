@@ -2,6 +2,8 @@
 # Valores por defecto pensados para una base local de desarrollo.
 server:
   port: ${PORT:8080}
+  # Render atiende por HTTPS y reenvía al contenedor: así Swagger genera las URL con https
+  forward-headers-strategy: framework
 
 spring:
   application:
@@ -27,3 +29,5 @@ management:
 
 app:
   periodo-actual: ${PERIODO_ACTUAL:2026-2}
+  # Sin valor por defecto a propósito: si falta JWT_SECRET el backend no arranca
+  jwt-secret: ${JWT_SECRET}

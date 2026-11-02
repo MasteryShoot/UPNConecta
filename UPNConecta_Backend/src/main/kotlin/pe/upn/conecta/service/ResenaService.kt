@@ -9,14 +9,12 @@ import pe.upn.conecta.dto.CalificacionResponse
 import pe.upn.conecta.dto.OpinionResponse
 import pe.upn.conecta.dto.ResenaRequest
 import pe.upn.conecta.dto.ResenaResponse
-import pe.upn.conecta.dto.UsuarioRequest
 import pe.upn.conecta.model.Criterio
 import pe.upn.conecta.model.Resena
 import pe.upn.conecta.model.Usuario
 import pe.upn.conecta.repository.CriterioRepository
 import pe.upn.conecta.repository.ResenaRepository
 import pe.upn.conecta.repository.SedeRepository
-import pe.upn.conecta.repository.UniversidadRepository
 import pe.upn.conecta.repository.UsuarioRepository
 import java.time.LocalDateTime
 
@@ -30,15 +28,15 @@ class ResenaService(
     private val sedeRepository: SedeRepository,
     private val criterioRepository: CriterioRepository,
     private val usuarioRepository: UsuarioRepository,
-    private val universidadRepository: UniversidadRepository,
     @Value("\${app.periodo-actual}") private val periodoActual: String
 ) {
 
     // ------------------------------------------------------------- CREATE
 
     @Transactional
-    fun registrar(request: ResenaRequest): ResenaResponse {
-        val usuario = obtenerOCrearUsuario(request.usuario)
+    fun registrar(request: ResenaRequest, codigoUsuario: String): ResenaResponse {
+        val usuario = usuarioRepository.findById(codigoUsuario).orElse(null)
+            ?: throw ApiException(HttpStatus.UNAUTHORIZED, "Tu sesión no es válida. Vuelve a iniciar sesión.")
         val sede = sedeRepository.findByCodigo(request.codigoSede)
             ?: throw ApiException(HttpStatus.NOT_FOUND, "La sede indicada no existe")
         val criterios = validarCriterios(request)
@@ -71,7 +69,7 @@ class ResenaService(
     @Transactional(readOnly = true)
     fun buscarMia(codigoUsuario: String, codigoSede: String, area: String): ResenaResponse {
         val resena = resenaRepository.findByUsuarioCodigoAndSedeCodigoAndAreaAndPeriodo(
-            codigoUsuario.uppercase(), codigoSede, area, periodoActual
+            codigoUsuario, codigoSede, area, periodoActual
         ) ?: throw ApiException(HttpStatus.NOT_FOUND, "Aún no has evaluado esta área en el ciclo actual")
         return aResponse(resena, criterioRepository.findByAreaOrderByOrden(area))
     }
@@ -94,8 +92,8 @@ class ResenaService(
     // ------------------------------------------------------------- UPDATE
 
     @Transactional
-    fun actualizar(idResena: Int, request: ResenaRequest): ResenaResponse {
-        val resena = buscarPropia(idResena, request.usuario.codigo)
+    fun actualizar(idResena: Int, request: ResenaRequest, codigoUsuario: String): ResenaResponse {
+        val resena = buscarPropia(idResena, codigoUsuario)
         if (resena.periodo != periodoActual) {
             throw ApiException(HttpStatus.CONFLICT, "Solo puedes modificar evaluaciones del ciclo actual")
         }
@@ -120,33 +118,6 @@ class ResenaService(
 
     // ---------------------------------------------------------- Auxiliares
 
-    /** RN01, RN02 y RN03: correo institucional, rol según el correo y una cuenta por correo. */
-    private fun obtenerOCrearUsuario(datos: UsuarioRequest): Usuario {
-        val correo = datos.correo.trim().lowercase()
-        val dominio = "@" + correo.substringAfter("@", "")
-        val universidad = universidadRepository.findByDominioCorreo(dominio)
-            ?: throw ApiException(HttpStatus.BAD_REQUEST, "Solo se aceptan correos institucionales")
-
-        val codigo = correo.substringBefore("@").uppercase()
-        if (codigo != datos.codigo.trim().uppercase()) {
-            throw ApiException(HttpStatus.BAD_REQUEST, "El código no corresponde al correo institucional")
-        }
-
-        usuarioRepository.findById(codigo).orElse(null)?.let { return it }
-
-        val rol = ReglasUsuario.rolDeCodigo(codigo)
-        return usuarioRepository.save(
-            Usuario(
-                codigo = codigo,
-                idUniversidad = universidad.idUniversidad!!,
-                correo = correo,
-                nombreCompleto = datos.nombreCompleto.trim(),
-                rol = rol,
-                verificado = false
-            )
-        )
-    }
-
     /** HU2.02 / HU2.04: se deben calificar todos los criterios del área, ni más ni menos. */
     private fun validarCriterios(request: ResenaRequest): List<Criterio> {
         val criterios = criterioRepository.findByAreaOrderByOrden(request.area)
@@ -170,7 +141,7 @@ class ResenaService(
     private fun buscarPropia(idResena: Int, codigoUsuario: String): Resena {
         val resena = resenaRepository.findById(idResena).orElse(null)
             ?: throw ApiException(HttpStatus.NOT_FOUND, "La evaluación no existe")
-        if (resena.usuario!!.codigo != codigoUsuario.trim().uppercase()) {
+        if (resena.usuario!!.codigo != codigoUsuario) {
             throw ApiException(HttpStatus.FORBIDDEN, "No puedes modificar la evaluación de otro usuario")
         }
         return resena

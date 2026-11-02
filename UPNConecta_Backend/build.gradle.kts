@@ -28,6 +28,10 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     // Solo el módulo de cifrado de Spring Security, para guardar las contraseñas con BCrypt
     implementation("org.springframework.security:spring-security-crypto")
+    // Token de sesión (JWT) que la app envía en cada operación privada
+    implementation("com.auth0:java-jwt:4.5.0")
+    // Documentación visual de la API en /swagger-ui.html
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9")
 
     // Migraciones de la base de datos (las tablas se crean desde db/migration)
     implementation("org.flywaydb:flyway-core")

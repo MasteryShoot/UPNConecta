@@ -14,16 +14,6 @@ import jakarta.validation.constraints.Size
 
 // ------------------------------------------------------------- Entrada
 
-data class UsuarioRequest(
-    @field:NotBlank(message = "El código de usuario es obligatorio")
-    val codigo: String,
-    @field:NotBlank(message = "El correo es obligatorio")
-    val correo: String,
-    @field:NotBlank(message = "El nombre es obligatorio")
-    @field:Size(max = 100)
-    val nombreCompleto: String
-)
-
 data class CalificacionRequest(
     val idCriterio: Int,
     @field:Min(1, message = "El puntaje mínimo es 1")
@@ -31,10 +21,11 @@ data class CalificacionRequest(
     val puntaje: Int
 )
 
-/** Se usa tanto para registrar (POST) como para actualizar (PUT) una reseña. */
+/**
+ * Se usa tanto para registrar (POST) como para actualizar (PUT) una reseña.
+ * El autor no viaja en el cuerpo: se obtiene del token de sesión.
+ */
 data class ResenaRequest(
-    @field:Valid
-    val usuario: UsuarioRequest,
     @field:NotBlank(message = "La sede es obligatoria")
     val codigoSede: String,
     @field:NotBlank(message = "El área es obligatoria")
@@ -132,7 +123,18 @@ data class SedeUsuarioRequest(
     val sedeCodigo: String
 )
 
-/** Datos de la cuenta que la app guarda al iniciar sesión (nunca incluye la contraseña). */
+/** Resultado de validar un correo por su dominio, antes de abrir la página de Microsoft. */
+data class DominioResponse(
+    val correo: String,
+    val dominio: String,
+    val universidad: String,
+    val rol: String
+)
+
+/**
+ * Datos de la cuenta que la app guarda al iniciar sesión (nunca incluye la contraseña).
+ * El token solo llega al iniciar sesión; el registro no lo entrega porque aún no prueba identidad.
+ */
 data class UsuarioResponse(
     val codigo: String,
     val correo: String,
@@ -140,7 +142,8 @@ data class UsuarioResponse(
     val rol: String,
     val sedeCodigo: String?,
     val universidad: String,
-    val proveedor: String
+    val proveedor: String,
+    val token: String? = null
 )
 
 data class UniversidadResponse(
