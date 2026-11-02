@@ -22,6 +22,11 @@ class ReglasNegocioTest {
     }
 
     @Test
+    fun elOtroDominioDeLaUpnTambienEsValido() {
+        assertEquals(Roles.DOCENTE, Roles.rolDeCorreo("gerardo.sarmiento@upn.edu.pe"))
+    }
+
+    @Test
     fun correoNoInstitucionalEsRechazado() {
         assertNull(Roles.rolDeCorreo("jose@gmail.com"))
     }

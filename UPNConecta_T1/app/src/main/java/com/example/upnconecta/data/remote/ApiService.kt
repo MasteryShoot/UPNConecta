@@ -15,6 +15,18 @@ import retrofit2.http.Query
  */
 interface ApiService {
 
+    // También sirve para despertar el backend al abrir la app
+    @GET("estado")
+    suspend fun estado(): Map<String, Any>
+
+    /** RN01: pregunta si el correo pertenece a un dominio institucional habilitado. */
+    @GET("auth/dominio")
+    suspend fun validarDominio(@Query("correo") correo: String): DominioApi
+
+    @PUT("usuarios/me/sede")
+    suspend fun guardarSede(@Body datos: SedeUsuarioRequest): UsuarioRespuesta
+
+
     // Cuentas: registro e inicio de sesión
     @POST("auth/registro")
     suspend fun registrar(@Body datos: RegistroRequest): UsuarioRespuesta
@@ -35,7 +47,6 @@ interface ApiService {
     // READ: devuelve 404 si el usuario aún no evaluó, por eso se usa Response
     @GET("resenas/mia")
     suspend fun obtenerMiResena(
-        @Query("usuario") codigoUsuario: String,
         @Query("sede") codigoSede: String,
         @Query("area") area: String
     ): Response<ResenaApi>
@@ -55,8 +66,5 @@ interface ApiService {
 
     // DELETE
     @DELETE("resenas/{idResena}")
-    suspend fun eliminarResena(
-        @Path("idResena") idResena: Int,
-        @Query("usuario") codigoUsuario: String
-    ): MensajeApi
+    suspend fun eliminarResena(@Path("idResena") idResena: Int): MensajeApi
 }

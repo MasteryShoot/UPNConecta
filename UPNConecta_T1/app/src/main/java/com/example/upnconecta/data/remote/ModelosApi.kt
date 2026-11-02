@@ -11,21 +11,14 @@ data class CriterioApi(
     val nombre: String
 )
 
-data class UsuarioApi(
-    val codigo: String,
-    val correo: String,
-    val nombreCompleto: String
-)
-
 data class CalificacionApi(
     val idCriterio: Int,
     val puntaje: Int,
     val nombre: String? = null
 )
 
-/** Cuerpo del POST y del PUT de /resenas. */
+/** Cuerpo del POST y del PUT de /resenas. El autor lo saca el backend del token. */
 data class ResenaRequest(
-    val usuario: UsuarioApi,
     val codigoSede: String,
     val area: String,
     val experiencia: Int,
@@ -84,5 +77,15 @@ data class UsuarioRespuesta(
     val rol: String,
     val sedeCodigo: String?,
     val universidad: String,
-    val proveedor: String
+    val proveedor: String,
+    val token: String? = null
 )
+
+data class DominioApi(
+    val correo: String,
+    val dominio: String,
+    val universidad: String,
+    val rol: String
+)
+
+data class SedeUsuarioRequest(val sedeCodigo: String)

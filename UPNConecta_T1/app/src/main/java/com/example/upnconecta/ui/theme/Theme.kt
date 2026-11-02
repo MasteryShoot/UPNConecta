@@ -1,5 +1,21 @@
 package com.example.upnconecta.ui.theme
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material3.Text
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.upnconecta.data.remote.Conectividad
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -52,7 +68,22 @@ fun ComponentActivity.pantallaConecta(
     )
     setContent {
         UPNConectaTheme {
-            contenido()
+            val enLinea by Conectividad.enLinea.collectAsState()
+            Box(Modifier.fillMaxSize()) {
+                contenido()
+                if (!enLinea) {
+                    Text(
+                        "Sin conexión a internet",
+                        color = Blanco, fontSize = 13.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .fillMaxWidth()
+                            .background(Rojo)
+                            .statusBarsPadding()
+                            .padding(vertical = 6.dp)
+                    )
+                }
+            }
         }
     }
 }

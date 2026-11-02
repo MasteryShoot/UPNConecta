@@ -84,18 +84,19 @@ data class Usuario(
 object Roles {
     const val ALUMNO = "Alumno"
     const val DOCENTE = "Docente"
-    const val DOMINIO = "@upn.pe"
+    // Solo sirve para mostrar el rol en pantalla: quien decide si se puede ingresar es el backend
+    private val dominios = listOf("@upn.pe", "@upn.edu.pe")
 
     // Los alumnos usan su código como correo: N00329320@upn.pe
     private val codigoAlumno = Regex("^[nN]\\d{8}$")
 
     /**
-     * RN01 y RN02: solo se aceptan correos @upn.pe y el rol se asigna según el correo.
+     * RN01 y RN02: solo se aceptan correos de la UPN y el rol se asigna según el correo.
      * Devuelve null si el correo no es institucional.
      */
     fun rolDeCorreo(correo: String): String? {
         val limpio = correo.trim()
-        if (!limpio.endsWith(DOMINIO, ignoreCase = true)) return null
+        if (dominios.none { limpio.endsWith(it, ignoreCase = true) }) return null
         val usuario = limpio.substringBefore("@")
         if (usuario.isBlank()) return null
         return if (codigoAlumno.matches(usuario)) ALUMNO else DOCENTE

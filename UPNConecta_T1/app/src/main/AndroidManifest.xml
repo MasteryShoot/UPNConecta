@@ -4,10 +4,13 @@
 
     <!-- Internet para cargar el mapa y ubicación para mostrar las sedes cercanas -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Para avisar cuando el teléfono se queda sin conexión -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <application
+        android:name=".UpnConectaApp"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"

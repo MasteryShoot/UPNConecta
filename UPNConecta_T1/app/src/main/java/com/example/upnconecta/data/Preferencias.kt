@@ -3,7 +3,6 @@ package com.example.upnconecta.data
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import java.security.MessageDigest
 
 /**
  * Manejo de SharedPreferences de UPN Conecta.
@@ -21,19 +20,6 @@ class Preferencias(context: Context) {
 
     // ---------------------------------------------------------------- Cuentas
 
-    /** RN03: una sola cuenta por correo institucional. */
-    fun existeUsuario(correo: String): Boolean =
-        prefs.contains(claveUsuario(correo, "nombre"))
-
-    fun registrarUsuario(nombre: String, correo: String, sedeId: String, contrasena: String) {
-        prefs.edit {
-            putString(claveUsuario(correo, "nombre"), nombre.trim())
-            putString(claveUsuario(correo, "sede"), sedeId)
-            // La contraseña no se guarda en texto plano, solo su hash SHA-256
-            putString(claveUsuario(correo, "clave"), hash(contrasena))
-        }
-    }
-
     /**
      * Copia local de la cuenta que devolvió el backend. La contraseña ya no se
      * guarda en el teléfono: la valida la API.
@@ -46,9 +32,6 @@ class Preferencias(context: Context) {
         }
     }
 
-    fun credencialesValidas(correo: String, contrasena: String): Boolean =
-        prefs.getString(claveUsuario(correo, "clave"), null) == hash(contrasena)
-
     fun usuario(correo: String): Usuario? {
         val nombre = prefs.getString(claveUsuario(correo, "nombre"), null) ?: return null
         val sede = prefs.getString(claveUsuario(correo, "sede"), null) ?: DatosDemo.sedes.first().id
@@ -57,9 +40,10 @@ class Preferencias(context: Context) {
 
     // ----------------------------------------------------------------- Sesión
 
-    fun iniciarSesion(correo: String, recordar: Boolean) {
+    fun iniciarSesion(correo: String, recordar: Boolean, token: String?) {
         prefs.edit {
             putString(SESION_CORREO, normalizar(correo))
+            putString(SESION_TOKEN, token)
             putBoolean(SESION_RECORDAR, recordar)
             putString(ULTIMO_CORREO, if (recordar) normalizar(correo) else "")
         }
@@ -68,9 +52,13 @@ class Preferencias(context: Context) {
     fun cerrarSesion() {
         prefs.edit {
             remove(SESION_CORREO)
+            remove(SESION_TOKEN)
             putBoolean(SESION_RECORDAR, false)
         }
     }
+
+    /** Token que entregó el backend; Retrofit lo envía en cada llamada. */
+    fun token(): String? = prefs.getString(SESION_TOKEN, null)
 
     /** Usuario con la sesión abierta (o null si nadie inició sesión). */
     fun usuarioActual(): Usuario? {
@@ -292,14 +280,10 @@ class Preferencias(context: Context) {
 
     private fun normalizar(correo: String) = correo.trim().lowercase()
 
-    private fun hash(texto: String): String =
-        MessageDigest.getInstance("SHA-256")
-            .digest(texto.toByteArray())
-            .joinToString("") { "%02x".format(it) }
-
     companion object {
         private const val NOMBRE_ARCHIVO = "upn_conecta_prefs"
         private const val SESION_CORREO = "sesion_correo"
+        private const val SESION_TOKEN = "sesion_token"
         private const val SESION_RECORDAR = "sesion_recordar"
         private const val ULTIMO_CORREO = "ultimo_correo"
         private const val SEP_CAMPO = "\u001F"

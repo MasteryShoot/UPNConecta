@@ -41,9 +41,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.upnconecta.data.CuentaRepositorio
 import com.example.upnconecta.data.DatosDemo
 import com.example.upnconecta.data.Preferencias
 import com.example.upnconecta.data.Sede
+import com.example.upnconecta.data.remote.RetrofitClient
 import com.example.upnconecta.inicio.HomeActivity
 import com.example.upnconecta.ui.componentes.Etiqueta
 import com.example.upnconecta.ui.componentes.ImagenSede
@@ -54,6 +56,7 @@ import com.example.upnconecta.ui.theme.Fondo
 import com.example.upnconecta.ui.theme.GrisClaro
 import com.example.upnconecta.ui.theme.GrisTexto
 import com.example.upnconecta.ui.theme.pantallaConecta
+import kotlinx.coroutines.launch
 
 class ElegirSedeActivity : ComponentActivity() {
 
@@ -82,6 +85,8 @@ fun PantallaElegirSede() {
     fun elegir(sede: Sede) {
         // HU2.01: la sede elegida queda guardada en SharedPreferences
         preferencias.guardarSede(sede.id)
+        // Y también en la cuenta del backend; si no hay internet queda la copia local
+        RetrofitClient.alcance.launch { CuentaRepositorio().guardarSede(sede.id) }
         Toast.makeText(context, "Sede seleccionada: UPN ${sede.nombre}", Toast.LENGTH_SHORT).show()
         val intent = Intent(context, HomeActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP

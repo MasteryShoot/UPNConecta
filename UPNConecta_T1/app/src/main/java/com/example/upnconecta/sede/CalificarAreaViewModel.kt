@@ -7,7 +7,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.upnconecta.data.DatosResena
 import com.example.upnconecta.data.ResenaRepositorio
-import com.example.upnconecta.data.Usuario
 import com.example.upnconecta.data.remote.CriterioApi
 import com.example.upnconecta.data.remote.ResenaApi
 import kotlinx.coroutines.launch
@@ -42,7 +41,7 @@ class CalificarAreaViewModel(
         private set
 
     /** READ: criterios del área y la evaluación del usuario (si ya la hizo). */
-    fun cargar(usuario: Usuario, sedeId: String, areaId: String) {
+    fun cargar(sedeId: String, areaId: String) {
         estado = EstadoCalificar.Cargando
         viewModelScope.launch {
             val criterios = repositorio.criterios(areaId).getOrElse {
@@ -50,7 +49,7 @@ class CalificarAreaViewModel(
                 estado = EstadoCalificar.Error(it.message ?: "Error")
                 return@launch
             }
-            estado = repositorio.miResena(usuario, sedeId, areaId).fold(
+            estado = repositorio.miResena(sedeId, areaId).fold(
                 onSuccess = { EstadoCalificar.Listo(criterios, it) },
                 onFailure = { EstadoCalificar.Error(it.message ?: "Error") }
             )
@@ -81,11 +80,11 @@ class CalificarAreaViewModel(
     }
 
     /** DELETE de la evaluación del usuario. */
-    fun eliminar(existente: ResenaApi, usuario: Usuario) {
+    fun eliminar(existente: ResenaApi) {
         if (envio == EstadoEnvio.Enviando) return
         envio = EstadoEnvio.Enviando
         viewModelScope.launch {
-            envio = repositorio.eliminar(existente.idResena, usuario).fold(
+            envio = repositorio.eliminar(existente.idResena).fold(
                 onSuccess = { EstadoEnvio.Exito(it.mensaje, null) },
                 onFailure = { EstadoEnvio.Error(it.message ?: "No se pudo eliminar") }
             )

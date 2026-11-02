@@ -38,6 +38,7 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -56,6 +57,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.upnconecta.data.DatosDemo
 import com.example.upnconecta.data.DatosResena
+import com.example.upnconecta.data.remote.Conectividad
+import com.example.upnconecta.ui.componentes.AvisoServidorLento
 import com.example.upnconecta.data.Moderacion
 import com.example.upnconecta.data.Preferencias
 import com.example.upnconecta.data.Usuario
@@ -108,13 +111,19 @@ fun PantallaCalificarArea(sedeId: String, areaId: String, vm: CalificarAreaViewM
 
     // READ al abrir la pantalla: criterios del área y evaluación previa del usuario
     LaunchedEffect(Unit) {
-        if (vm.estado == EstadoCalificar.Cargando) vm.cargar(usuario, sedeId, areaId)
+        if (vm.estado == EstadoCalificar.Cargando) vm.cargar(sedeId, areaId)
+    }
+
+    // Si la pantalla quedó en error por falta de internet, se reintenta al volver la conexión
+    val enLinea by Conectividad.enLinea.collectAsState()
+    LaunchedEffect(enLinea) {
+        if (enLinea && vm.estado is EstadoCalificar.Error) vm.cargar(sedeId, areaId)
     }
 
     when (val estado = vm.estado) {
         EstadoCalificar.Cargando -> PantallaCargando(area.nombre)
         is EstadoCalificar.Error -> PantallaErrorRed(area.nombre, estado.mensaje) {
-            vm.cargar(usuario, sedeId, areaId)
+            vm.cargar(sedeId, areaId)
         }
         is EstadoCalificar.Listo -> FormularioCalificacion(
             sedeId, areaId, usuario, estado.criterios, estado.existente, vm, preferencias
@@ -200,7 +209,6 @@ private fun FormularioCalificacion(
         if (error != null) return
 
         val datos = DatosResena(
-            usuario = usuario,
             sedeId = sedeId,
             areaId = areaId,
             experiencia = experiencia,
@@ -220,7 +228,7 @@ private fun FormularioCalificacion(
             confirmButton = {
                 TextButton(onClick = {
                     confirmarEliminar = false
-                    vm.eliminar(existente, usuario)
+                    vm.eliminar(existente)
                 }) { Text("Eliminar", color = Rojo, fontWeight = FontWeight.Bold) }
             },
             dismissButton = {
@@ -414,6 +422,7 @@ private fun PantallaCargando(titulo: String) {
             CircularProgressIndicator(color = Amarillo)
             Spacer(Modifier.height(12.dp))
             Text("Cargando criterios...", color = GrisTexto, fontSize = 13.sp)
+            AvisoServidorLento()
         }
     }
 }

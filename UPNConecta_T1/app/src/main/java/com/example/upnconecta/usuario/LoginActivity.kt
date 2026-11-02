@@ -27,12 +27,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
@@ -66,8 +65,8 @@ import com.example.upnconecta.data.CuentaRepositorio
 import com.example.upnconecta.data.Preferencias
 import com.example.upnconecta.data.remote.MicrosoftAuth
 import com.example.upnconecta.data.remote.UsuarioRespuesta
-import com.example.upnconecta.data.Roles
 import com.example.upnconecta.sede.ElegirSedeActivity
+import com.example.upnconecta.ui.componentes.AvisoServidorLento
 import com.example.upnconecta.ui.componentes.BotonAmarillo
 import com.example.upnconecta.ui.componentes.abrir
 import com.example.upnconecta.ui.theme.Amarillo
@@ -113,11 +112,13 @@ fun PantallaLogin(respuestaMicrosoft: Uri? = null, alProcesar: () -> Unit = {}) 
     var verContrasena by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var mostrarAyuda by remember { mutableStateOf(false) }
+    // El camino normal es Microsoft; la contraseña solo aparece si la persona la pide
+    var conContrasena by remember { mutableStateOf(false) }
 
     // La API ya validó la cuenta: se guarda la copia local y se abre Elegir sede
     fun entrar(cuenta: UsuarioRespuesta, metodo: String) {
         preferencias.guardarCuenta(cuenta.nombreCompleto, cuenta.correo, cuenta.sedeCodigo)
-        preferencias.iniciarSesion(cuenta.correo, recordar)
+        preferencias.iniciarSesion(cuenta.correo, recordar, cuenta.token)
         Ajustes(context, cuenta.correo).metodoIngreso = metodo
         Toast.makeText(context, "Bienvenido(a), ${cuenta.nombreCompleto.substringBefore(" ")}", Toast.LENGTH_SHORT).show()
         context.abrir(ElegirSedeActivity::class.java) {
@@ -129,8 +130,6 @@ fun PantallaLogin(respuestaMicrosoft: Uri? = null, alProcesar: () -> Unit = {}) 
         val correoLimpio = correo.trim()
         error = when {
             correoLimpio.isEmpty() || contrasena.isEmpty() -> "Complete todos los campos"
-            // HU1.01 - Escenario: correo no institucional
-            Roles.rolDeCorreo(correoLimpio) == null -> "Debe usar su correo institucional para ingresar"
             else -> null
         }
         if (error != null || cargando) return
@@ -144,12 +143,26 @@ fun PantallaLogin(respuestaMicrosoft: Uri? = null, alProcesar: () -> Unit = {}) 
         }
     }
 
+    // No hay registro: el backend valida el dominio del correo y Microsoft confirma la identidad.
+    // La cuenta se crea sola la primera vez.
     fun continuarConMicrosoft() {
-        if (!MicrosoftAuth.configurado) {
-            error = "Falta configurar MS_CLIENT_ID en local.properties"
+        val correoLimpio = correo.trim()
+        if (correoLimpio.isEmpty()) {
+            error = "Escribe tu correo institucional"
             return
         }
-        context.startActivity(Intent(Intent.ACTION_VIEW, MicrosoftAuth.urlInicio()))
+        if (cargando) return
+        error = null
+        cargando = true
+        alcance.launch {
+            repositorio.validarDominio(correoLimpio).fold(
+                onSuccess = {
+                    context.startActivity(Intent(Intent.ACTION_VIEW, MicrosoftAuth.urlInicio(correoLimpio)))
+                },
+                onFailure = { error = it.message }
+            )
+            cargando = false
+        }
     }
 
     // Regreso desde la página de Microsoft
@@ -162,7 +175,7 @@ fun PantallaLogin(respuestaMicrosoft: Uri? = null, alProcesar: () -> Unit = {}) 
             return@LaunchedEffect
         }
         cargando = true
-        repositorio.iniciarConMicrosoft(codigo).fold(
+        repositorio.iniciarConMicrosoft(codigo, uri.getQueryParameter("state")).fold(
             onSuccess = { entrar(it, Ajustes.METODO_MICROSOFT) },
             onFailure = { error = it.message }
         )
@@ -213,28 +226,30 @@ fun PantallaLogin(respuestaMicrosoft: Uri? = null, alProcesar: () -> Unit = {}) 
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(Modifier.height(16.dp))
+            if (conContrasena) {
+                Spacer(Modifier.height(16.dp))
 
-            EtiquetaCampo("CONTRASEÑA")
-            OutlinedTextField(
-                value = contrasena,
-                onValueChange = { contrasena = it; error = null },
-                placeholder = { Text("••••••••") },
-                singleLine = true,
-                visualTransformation = if (verContrasena) VisualTransformation.None else PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                trailingIcon = {
-                    IconButton(onClick = { verContrasena = !verContrasena }) {
-                        Icon(
-                            if (verContrasena) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-                            contentDescription = "Mostrar contraseña"
-                        )
-                    }
-                },
-                shape = RoundedCornerShape(12.dp),
-                colors = coloresCampo(),
-                modifier = Modifier.fillMaxWidth()
-            )
+                EtiquetaCampo("CONTRASEÑA")
+                OutlinedTextField(
+                    value = contrasena,
+                    onValueChange = { contrasena = it; error = null },
+                    placeholder = { Text("••••••••") },
+                    singleLine = true,
+                    visualTransformation = if (verContrasena) VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    trailingIcon = {
+                        IconButton(onClick = { verContrasena = !verContrasena }) {
+                            Icon(
+                                if (verContrasena) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                                contentDescription = "Mostrar contraseña"
+                            )
+                        }
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = coloresCampo(),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -252,8 +267,10 @@ fun PantallaLogin(respuestaMicrosoft: Uri? = null, alProcesar: () -> Unit = {}) 
                     )
                     Text("Recordarme", fontSize = 13.sp, color = GrisTexto)
                 }
-                TextButton(onClick = { mostrarAyuda = true }) {
-                    Text("¿Olvidaste tu contraseña?", color = Negro, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                if (conContrasena) {
+                    TextButton(onClick = { mostrarAyuda = true }) {
+                        Text("¿Olvidaste tu contraseña?", color = Negro, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    }
                 }
             }
 
@@ -261,57 +278,56 @@ fun PantallaLogin(respuestaMicrosoft: Uri? = null, alProcesar: () -> Unit = {}) 
                 Text(error!!, color = Rojo, fontSize = 13.sp, modifier = Modifier.padding(vertical = 4.dp))
             }
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(16.dp))
             if (cargando) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                     CircularProgressIndicator(color = Amarillo, modifier = Modifier.size(28.dp))
                 }
-            } else {
+                AvisoServidorLento()
+            } else if (conContrasena) {
                 BotonAmarillo("Iniciar sesión", onClick = { iniciarSesion() })
+            } else {
+                // Ingreso principal con la cuenta institucional de Microsoft 365
+                Button(
+                    onClick = { continuarConMicrosoft() },
+                    shape = RoundedCornerShape(26.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Amarillo, contentColor = Negro),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                ) {
+                    LogoMicrosoft()
+                    Spacer(Modifier.width(10.dp))
+                    Text("Continuar con Microsoft", fontWeight = FontWeight.Bold)
+                }
+                Text(
+                    "No necesitas crear una cuenta: validamos el dominio de tu correo e ingresas con " +
+                        "la misma contraseña de Outlook y Teams.",
+                    color = GrisTexto, fontSize = 12.sp,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
             }
 
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                HorizontalDivider(Modifier.weight(1f), color = GrisClaro)
-                Text("  o  ", color = GrisTexto, fontSize = 12.sp)
-                HorizontalDivider(Modifier.weight(1f), color = GrisClaro)
-            }
-
-            // Ingreso con la cuenta institucional de Microsoft 365 (sin crear otra contraseña)
-            OutlinedButton(
-                onClick = { continuarConMicrosoft() },
-                enabled = !cargando,
-                shape = RoundedCornerShape(12.dp),
-                border = BorderStroke(1.dp, GrisClaro),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp)
-            ) {
-                LogoMicrosoft()
-                Spacer(Modifier.width(10.dp))
-                Text("Continuar con Microsoft", color = Negro, fontWeight = FontWeight.Bold)
-            }
-            Text(
-                "Usa el mismo correo y contraseña de tu cuenta institucional (Outlook, Teams).",
-                color = GrisTexto, fontSize = 11.sp,
-                modifier = Modifier.padding(top = 6.dp)
-            )
-
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .navigationBarsPadding()
-                    .padding(top = 12.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(top = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("¿Nuevo en UPN Conecta?", color = GrisTexto, fontSize = 13.sp)
-                TextButton(onClick = { context.abrir(RegistroActivity::class.java) }) {
-                    Text("Crear cuenta", color = Negro, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                TextButton(onClick = { conContrasena = !conContrasena; error = null }) {
+                    Text(
+                        if (conContrasena) "Volver a ingresar con Microsoft" else "¿No puedes usar Microsoft? Usa una contraseña",
+                        color = Negro, fontWeight = FontWeight.Bold, fontSize = 13.sp
+                    )
+                }
+                if (conContrasena) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("¿Aún no tienes contraseña?", color = GrisTexto, fontSize = 13.sp)
+                        TextButton(onClick = { context.abrir(RegistroActivity::class.java) }) {
+                            Text("Crear cuenta", color = Negro, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        }
+                    }
                 }
             }
         }
@@ -327,7 +343,7 @@ fun PantallaLogin(respuestaMicrosoft: Uri? = null, alProcesar: () -> Unit = {}) 
             text = {
                 Text(
                     "Por ahora la recuperación se realiza con Soporte Técnico de tu sede. " +
-                        "En la siguiente versión se enviará un enlace a tu correo @upn.pe.",
+                        "También puedes ingresar con Microsoft, sin contraseña de la app.",
                     style = MaterialTheme.typography.bodyMedium
                 )
             },

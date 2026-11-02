@@ -1,5 +1,11 @@
 package com.example.upnconecta.ui.componentes
 
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.style.TextAlign
+import kotlinx.coroutines.delay
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
@@ -97,6 +103,23 @@ open class ConectaActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         refresco.intValue++
+    }
+}
+
+/** Se muestra mientras algo carga: si tarda, explica que el servidor gratuito está despertando. */
+@Composable
+fun AvisoServidorLento() {
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(5000)
+        visible = true
+    }
+    if (visible) {
+        Text(
+            "Despertando el servidor, puede tardar hasta un minuto...",
+            color = GrisTexto, fontSize = 12.sp, textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+        )
     }
 }
 
